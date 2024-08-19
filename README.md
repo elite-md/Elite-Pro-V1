@@ -32,4 +32,3 @@ I'm Elite-Pro a public WhatsApp bot with rich features Created by Chinwo Chinedu
 
  --- 
 - Star ⭐ repo if you like this bot.
--
