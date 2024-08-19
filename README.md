@@ -16,6 +16,20 @@
 <a aria-label="Chat me" href="https://t.me/Chinedu_md" target="_blank">
     <img alt="telegram" src="https://img.shields.io/badge/Chat Me-25D366?style=for-the-badge&logo=telegram&logoColor=white" />
   </a>
-    
-    # Elite-Pro-V1
-A public whatsapp bot with rich and multiple features Created by Chinwo Chinedu Emmanuel 
+
+---
+
+## DEPLOYMENT METHODS
+---
+   ***Fork Repo***
+ ***[FORK](https://github.com/elite-md/Elite-Pro-V1/fork)***
+ 
+    FORK MY REPO TO GAIN FULL ACCESS
+---
+
+  ## DESCRIPTION
+I'm Elite-Pro a public WhatsApp bot with rich features Created by Chinwo Chinedu Emmanuel and Hacxk. Feel free to deploy my bot in any of the deployment site. 😜
+
+ --- 
+- Star ⭐ repo if you like this bot.
+-
