@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "easy-baileys": "^1.5.2",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
