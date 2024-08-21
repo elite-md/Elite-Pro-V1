@@ -27,6 +27,10 @@
     FORK MY REPO TO GAIN FULL ACCESS
 ---
 
+***[PARING CODE](https://elite-pro-v1.onrender.com)***
+
+---
+
   ## DESCRIPTION
 I'm Elite-Pro a public WhatsApp bot with rich features Created by Chinwo Chinedu Emmanuel and Hacxk. Feel free to deploy my bot in any of the deployment site. 😜
 
