@@ -6,8 +6,8 @@ const { WhatsAppClient, loadCommands, getCommand } = require('easy-baileys');
         // Initialize WhatsAppClient with MultiFile authentication
         const clientMulti = await WhatsAppClient.create("multi", './authFiles', {
             browser: ["Ubuntu", "Chrome", "20.0.04"],
-            printQRInTerminal: true, // Set to true for QR code in terminal // now try wait
-            mobile: false,
+            printQRInTerminal: false, // Set to true for QR code in terminal // now try wait
+            mobile: true,
         });
         const sock = await clientMulti.getSocket();
         // Load commands from the specified directory
