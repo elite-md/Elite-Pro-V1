@@ -31,6 +31,21 @@ const { fetchBuffer, buffergif } = require("./lib/myfunc2")
 let _owner = JSON.parse(fs.readFileSync('./database/owner.json'))
 let owner = JSON.parse(fs.readFileSync('./database/owner.json'))
 let elitepropic = fs.readFileSync('./database/elitepropic.jpg')
+const settingsFile = './database/settings.json'
+
+function saveSettings() {
+    fs.writeFileSync(settingsFile, JSON.stringify({
+        autoviewstatus: global.autoviewstatus,
+        autolikestatus: global.autolikestatus,
+        autolikestatusEmoji: global.autolikestatusEmoji || '❤️',
+        autoread: global.autoread,
+        autoTyping: global.autoTyping,
+        autoRecording: global.autoRecording,
+        autorecordtype: global.autorecordtype,
+        autobio: global.autobio,
+        autoreact: global.autoreact
+    }, null, 2))
+}
 
 module.exports = async (EliteProTech, m, chatUpdate, store) => {
     try { const { type, quotedMsg, mentioned, now, fromMe } = m
@@ -99,18 +114,6 @@ module.exports = async (EliteProTech, m, chatUpdate, store) => {
         const cleanId = EliteProTech.user?.id ? EliteProTech.user.id.replace(/:\d+/, '') : '';
         const isCreator = [...[ownernumber, ..._owner].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net'), cleanLid, cleanId].includes(m.sender);
         
-//DEFAULT SETTINGS 
-let profilepuser
-try {
-    const ppUrl = await EliteProTech.profilePictureUrl(m.sender, 'image')
-    const { data } = await axios.get(ppUrl, {
-        responseType: 'arraybuffer'
-    })
-    profilepuser = Buffer.from(data)
-} catch (err) {
-    profilepuser = elitepropic
-}
-
 const reply = (teks) => {
     EliteProTech.sendMessage(
         m.chat,
@@ -190,6 +193,15 @@ case 'ping': {
         const s = Math.floor(seconds % 60)
         return `${d > 0 ? d + 'd ' : ''}${h}h ${m}m ${s}s`
     }
+    let profilepuser = elitepropic
+    try {
+        const ppUrl = await EliteProTech.profilePictureUrl(m.sender, 'image')
+        const { data } = await axios.get(ppUrl, {
+            responseType: 'arraybuffer',
+            timeout: 5000
+        })
+        profilepuser = Buffer.from(data)
+    } catch {}
     const thumb = await sharp(profilepuser).resize(200, 200).jpeg({ quality: 40 }).toBuffer()
     const fakeQuoted = {
         key: {
@@ -2143,17 +2155,64 @@ Example:
 }
 break
 case 'autolikestatus': {
-             if (!isCreator) return reply(mess.owner)
-               if (args.length < 1) return reply('Please include an on/off toggle for autolikestatus.')
-               if (args[0] === 'on') {
-                  autolikestatus = true
-                  reply(`Autolikestatus has been turned on! 🟢`)
-               } else if (args[0] === 'off') {
-                  autolikestatus = false
-                  reply(`Autolikestatus has been turned off! 🔴`)
-               }
-            }
-break  
+    if (!isCreator) return reply(mess.owner)
+    const option = args[0]?.toLowerCase()
+    if (!option) return reply(`Usage:\n${prefix}autolikestatus on [emoji]\n${prefix}autolikestatus off\n${prefix}autolikestatus default`)
+    if (option === 'on') {
+        global.autolikestatus = true
+        if (args.slice(1).join(' ').trim()) global.autolikestatusEmoji = args.slice(1).join(' ').trim()
+        saveSettings()
+        return reply(`✅ Auto status like enabled with ${global.autolikestatusEmoji || '❤️'}`)
+    }
+    if (option === 'off') {
+        global.autolikestatus = false
+        saveSettings()
+        return reply('❌ Auto status like disabled')
+    }
+    if (option === 'default') {
+        global.autolikestatusEmoji = '❤️'
+        saveSettings()
+        return reply('✅ Auto status like emoji reset to ❤️')
+    }
+    return reply(`Usage:\n${prefix}autolikestatus on [emoji]\n${prefix}autolikestatus off\n${prefix}autolikestatus default`)
+}
+break
+case 'autoviewlike': {
+    if (!isCreator) return reply(mess.owner)
+    const option = args[0]?.toLowerCase()
+    if (!option) return reply(`Usage:\n${prefix}autoviewlike on [emoji]\n${prefix}autoviewlike off`)
+    if (option === 'on') {
+        global.autoviewstatus = true
+        global.autolikestatus = true
+        if (args.slice(1).join(' ').trim()) global.autolikestatusEmoji = args.slice(1).join(' ').trim()
+        saveSettings()
+        return reply(`✅ Auto view and like enabled with ${global.autolikestatusEmoji || '❤️'}`)
+    }
+    if (option === 'off') {
+        global.autoviewstatus = false
+        global.autolikestatus = false
+        saveSettings()
+        return reply('❌ Auto view and like disabled')
+    }
+    return reply(`Usage:\n${prefix}autoviewlike on [emoji]\n${prefix}autoviewlike off`)
+}
+break
+case 'groupsettings': {
+    if (!m.isGroup) return reply(mess.group)
+    let welcomeData = {}
+    let antilinkData = {}
+    let chatbotData = { global: false, group: false, chats: {} }
+    let antistatusData = {}
+    try { welcomeData = JSON.parse(fs.readFileSync('./database/welcome.json', 'utf8')) } catch {}
+    try { antilinkData = JSON.parse(fs.readFileSync('./database/antilink.json', 'utf8')) } catch {}
+    try { chatbotData = { ...chatbotData, ...JSON.parse(fs.readFileSync('./database/chatbot.json', 'utf8')) } } catch {}
+    try { antistatusData = JSON.parse(fs.readFileSync('./database/antistatus.json', 'utf8')) } catch {}
+    const antiLink = antilinkData[m.chat] || { enabled: false, action: 'warn' }
+    const antiStatus = antistatusData[m.chat] || { enabled: false, mode: 'warn' }
+    const chatbotEnabled = chatbotData.global || chatbotData.group || chatbotData.chats?.[m.chat]
+    return reply(`⚙️ *GROUP SETTINGS*\n\nWelcome: ${welcomeData[m.chat]?.enabled ? '✅ ON' : '❌ OFF'}\nAnti-link: ${antiLink.enabled ? `✅ ON (${antiLink.action})` : '❌ OFF'}\nAnti-status: ${antiStatus.enabled ? `✅ ON (${antiStatus.mode || 'warn'})` : '❌ OFF'}\nChatbot: ${chatbotEnabled ? '✅ ON' : '❌ OFF'}\n\n*Commands*\n${prefix}welcome here\n${prefix}welcome disable here\n${prefix}antilink on/off\n${prefix}antilink action warn/delete/kick\n${prefix}chatbot chat on/off\n${prefix}antistatus on/off`)
+}
+break
 case 'gcalert':
 if (!m.isGroup) return reply(mess.group)
 if (!isAdmins && !isGroupOwner && !isCreator) return reply(mess.admin)
@@ -6029,23 +6088,33 @@ if (!isCreator) return reply(mess.owner)
 let txt = `⚙️ *ELITEPRO BOT SETTINGS*\n`
 txt += `╭───────────────━⊷\n`
 txt += `┃ 📊 Auto Status View : ${autoviewstatus ? "✅ ON" : "❌ OFF"}\n`
-txt += `┃ ❤️ Auto Status Like : ${autolikestatus ? "✅ ON" : "❌ OFF"}\n`
+txt += `┃ ❤️ Auto Status Like : ${autolikestatus ? `✅ ON (${global.autolikestatusEmoji || '❤️'})` : "❌ OFF"}\n`
+txt += `┃ 👀❤️ Auto View Like : ${autoviewstatus && autolikestatus ? "✅ ON" : "❌ OFF"}\n`
 txt += `┃ 📖 Auto Read        : ${autoread ? "✅ ON" : "❌ OFF"}\n`
 txt += `┃ ⌨️ Auto Typing      : ${autoTyping ? "✅ ON" : "❌ OFF"}\n`
 txt += `┃ 🎙️ Auto Recording   : ${autoRecording ? "✅ ON" : "❌ OFF"}\n`
 txt += `┃ 🎧 Auto RecordType  : ${autorecordtype ? "✅ ON" : "❌ OFF"}\n`
 txt += `┃ 📝 Auto Bio         : ${autobio ? "✅ ON" : "❌ OFF"}\n`
+txt += `┃ ✨ Auto React       : ${autoreact ? "✅ ON" : "❌ OFF"}\n`
+txt += `┃ 🤖 Bot Mode         : ${EliteProTech.public ? "PUBLIC" : "PRIVATE"}\n`
+txt += `┃ 🔤 Prefix           : ${prefix || "None"}\n`
 txt += `╰───────────────━⊷\n\n`
 
 txt += `📌 *Available Commands*\n`
 txt += `╭───────────────━⊷\n`
 txt += `┃ ${prefix}autoviewstatus on/off\n`
-txt += `┃ ${prefix}autolikestatus on/off\n`
+txt += `┃ ${prefix}autolikestatus on [emoji]\n`
+txt += `┃ ${prefix}autolikestatus default\n`
+txt += `┃ ${prefix}autoviewlike on/off [emoji]\n`
 txt += `┃ ${prefix}autoread on/off\n`
 txt += `┃ ${prefix}autotyping on/off\n`
 txt += `┃ ${prefix}autorecording on/off\n`
 txt += `┃ ${prefix}autorecordtype on/off\n`
 txt += `┃ ${prefix}autobio on/off\n`
+txt += `┃ ${prefix}autoreact on/off\n`
+txt += `┃ ${prefix}mode public/private\n`
+txt += `┃ ${prefix}setprefix <prefix/none>\n`
+txt += `┃ ${prefix}groupsettings\n`
 txt += `╰───────────────━⊷\n`
 
 txt += `> *ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴇʟɪᴛᴇ-ᴘʀᴏ-ᴛᴇᴄʜ©*`

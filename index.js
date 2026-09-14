@@ -23,6 +23,12 @@ if (process.argv[2] !== "--child") {
 const path = require('path');
 const fs = require('fs');
 require('./config')
+try {
+    const savedSettings = JSON.parse(fs.readFileSync('./database/settings.json', 'utf8'))
+    for (const key of ['autoviewstatus', 'autolikestatus', 'autolikestatusEmoji', 'autoread', 'autoTyping', 'autoRecording', 'autorecordtype', 'autobio', 'autoreact']) {
+        if (savedSettings[key] !== undefined) global[key] = savedSettings[key]
+    }
+} catch {}
 if (!fs.existsSync(__dirname + '/session/creds.json') && global.sessionid) {
     try {
         const sessionData = JSON.parse(global.sessionid);
@@ -249,14 +255,7 @@ async function handleStatusWatcher(EliteProTech, mek) {
 
         if (!global.autolikestatus) return
 
-        const emojis = [
-            '❤️','💸','😇','🍂','💥','💯','🔥','💫','💎','💗',
-            '🤍','🖤','👀','🙌','🙆','🚩','🥰','💐','😎','🤎',
-            '✅','⚡','🧡','😁','😄','🌸','🕊️','🌷','⛅','🌟',
-            '🗿','☠️','💜','💙','🌝','💚'
-        ]
-
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)]
+        const emoji = global.autolikestatusEmoji || '❤️'
 
         await EliteProTech.sendMessage(
             'status@broadcast',
@@ -1001,15 +1000,13 @@ EliteProTech.ev.on("connection.update", async (s) => {
             console.log(chalk.cyan(`Logged in as: ${EliteProTech.user?.name || 'Unknown'} (${EliteProTech.user?.id?.split(':')[0]})`));
             console.log(chalk.yellow(`]`));
 
-			await delay(1999)
-
             if (!connectedMessageSent) {
                 connectedMessageSent = true
 
                 const botJid = EliteProTech.decodeJid(EliteProTech.user.id)
-                await EliteProTech.sendMessage(botJid, {
+                EliteProTech.sendMessage(botJid, {
                     text: `*✅ ELITE-PRO-V1 is now connected and online!* Bot Prefix: ${global.prefix || '.'} | Mode: ${modeData.mode}\n\n*Join us:* https://t.me/eliteprotechs`
-                })
+                }).catch(() => {})
             }
         }
 if (
