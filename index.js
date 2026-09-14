@@ -23,12 +23,14 @@ if (process.argv[2] !== "--child") {
 const path = require('path');
 const fs = require('fs');
 require('./config')
+let savedSettings = {}
 try {
-    const savedSettings = JSON.parse(fs.readFileSync('./database/settings.json', 'utf8'))
+    savedSettings = JSON.parse(fs.readFileSync('./database/settings.json', 'utf8'))
     for (const key of ['autoviewstatus', 'autolikestatus', 'autolikestatusEmoji', 'autoread', 'autoTyping', 'autoRecording', 'autorecordtype', 'autobio', 'autoreact']) {
         if (savedSettings[key] !== undefined) global[key] = savedSettings[key]
     }
 } catch {}
+global.botMode = savedSettings.mode || 'private'
 if (!fs.existsSync(__dirname + '/session/creds.json') && global.sessionid) {
     try {
         const sessionData = JSON.parse(global.sessionid);
@@ -980,13 +982,7 @@ EliteProTech.ev.on('contacts.update', update => {
         return (withoutContact ? '' : v.name) || v.subject || v.verifiedName || PhoneNumber('+' + jid.replace('@s.whatsapp.net', '')).getNumber('international')
     }
     
-let modeData
-try {
-    modeData = JSON.parse(fs.readFileSync('./database/mode.json'))
-} catch {
-    modeData = { mode: 'public' }
-    fs.writeFileSync('./database/mode.json', JSON.stringify(modeData, null, 2))
-}
+const modeData = { mode: global.botMode }
 
 EliteProTech.public = modeData.mode === 'public'
 

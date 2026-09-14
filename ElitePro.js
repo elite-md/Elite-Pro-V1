@@ -43,8 +43,16 @@ function saveSettings() {
         autoRecording: global.autoRecording,
         autorecordtype: global.autorecordtype,
         autobio: global.autobio,
-        autoreact: global.autoreact
+        autoreact: global.autoreact,
+        mode: global.botMode || 'private'
     }, null, 2))
+}
+
+function normalizeOwnerId(value) {
+    const id = String(value || '').trim().toLowerCase()
+    if (id.endsWith('@lid')) return id.replace(/:\d+(?=@lid$)/, '')
+    const digits = id.replace(/\D/g, '')
+    return digits ? `${digits}@s.whatsapp.net` : ''
 }
 
 module.exports = async (EliteProTech, m, chatUpdate, store) => {
@@ -112,7 +120,8 @@ module.exports = async (EliteProTech, m, chatUpdate, store) => {
         const isGroupOwner = m.isGroup ? (groupOwner ? groupOwner : groupAdmins).includes(m.sender) : false
         const cleanLid = EliteProTech.user?.lid ? EliteProTech.user.lid.replace(/:\d+/, '') : '';
         const cleanId = EliteProTech.user?.id ? EliteProTech.user.id.replace(/:\d+/, '') : '';
-        const isCreator = [...[ownernumber, ..._owner].map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net'), cleanLid, cleanId].includes(m.sender);
+        const ownerIds = [ownernumber, ..._owner, cleanLid, cleanId].map(normalizeOwnerId).filter(Boolean)
+        const isCreator = ownerIds.includes(normalizeOwnerId(m.sender))
         
 const reply = (teks) => {
     EliteProTech.sendMessage(
@@ -2195,6 +2204,15 @@ case 'autoviewlike': {
         return reply('❌ Auto view and like disabled')
     }
     return reply(`Usage:\n${prefix}autoviewlike on [emoji]\n${prefix}autoviewlike off`)
+}
+break
+case 'setlikestatus': {
+    if (!isCreator) return reply(mess.owner)
+    const emoji = text.trim()
+    if (!emoji) return reply(`Usage: ${prefix}setlikestatus 🔥`)
+    global.autolikestatusEmoji = emoji
+    saveSettings()
+    return reply(`✅ Auto status-like emoji changed to ${emoji}`)
 }
 break
 case 'groupsettings': {
@@ -6105,6 +6123,7 @@ txt += `╭───────────────━⊷\n`
 txt += `┃ ${prefix}autoviewstatus on/off\n`
 txt += `┃ ${prefix}autolikestatus on [emoji]\n`
 txt += `┃ ${prefix}autolikestatus default\n`
+txt += `┃ ${prefix}setlikestatus [emoji]\n`
 txt += `┃ ${prefix}autoviewlike on/off [emoji]\n`
 txt += `┃ ${prefix}autoread on/off\n`
 txt += `┃ ${prefix}autotyping on/off\n`
@@ -8079,7 +8098,8 @@ case 'mode': {
 
     EliteProTech.public = input === 'public';
 
-    fs.writeFileSync('./database/mode.json', JSON.stringify({ mode: input }, null, 2));
+    global.botMode = input;
+    saveSettings();
 
     await EliteProTech.sendMessage(from, {
         react: {
@@ -9259,27 +9279,40 @@ flipe = quere.split('').reverse().join('')
 reply(`\`\`\`「 FLIP TEXT 」\`\`\`\n*•> Normal :*\n${quere}\n*•> Flip :*\n${flipe}`)
 }
 break
-case 'addowner': case 'addsudo':
+case 'addowner': case 'addsudo': {
 if (!isCreator) return reply(mess.owner)
-if (!args[0]) return reply(`Use ${prefix+command} number\nExample ${prefix+command} ${ownernumber}`)
-bnnd = q.split("|")[0].replace(/[^0-9]/g, '')
-let ceknye = await EliteProTech.onWhatsApp(bnnd)
-if (ceknye.length == 0) return reply(`Enter A Valid And Registered Number On WhatsApp!!!`)
-owner.push(bnnd)
-_owner.push(bnnd)
-fs.writeFileSync('./database/owner.json', JSON.stringify(owner))
-reply(`Number ${bnnd} Has Become An Owner!!!`)
+const rawOwner = q.split("|")[0].trim().toLowerCase()
+if (!rawOwner) return reply(`Use ${prefix + command} number or LID\nExamples:\n${prefix + command} ${ownernumber}\n${prefix + command} 123456789@lid`)
+let ownerId
+if (rawOwner.endsWith('@lid')) {
+    ownerId = normalizeOwnerId(rawOwner)
+    if (!/^\d+@lid$/.test(ownerId)) return reply('Use a valid LID, for example: 123456789@lid')
+} else {
+    ownerId = rawOwner.replace(/[^0-9]/g, '')
+    if (!ownerId) return reply('Use a valid phone number or LID')
+    const ceknye = await EliteProTech.onWhatsApp(ownerId)
+    if (ceknye.length === 0) return reply('Enter a valid WhatsApp number')
+}
+if (owner.includes(ownerId)) return reply('That owner is already added')
+owner.push(ownerId)
+_owner.push(ownerId)
+fs.writeFileSync('./database/owner.json', JSON.stringify(owner, null, 2))
+reply(`✅ ${ownerId} is now an owner`)
+}
 break
-case 'delowner': case 'deletesudo': case 'deleteowner':
+case 'delowner': case 'deletesudo': case 'deleteowner': {
 if (!isCreator) return reply(mess.owner)
-if (!args[0]) return reply(`Use ${prefix+command} nomor\nExample ${prefix+command} 2348109263390`)
-ya = q.split("|")[0].replace(/[^0-9]/g, '')
-unp = owner.indexOf(ya)
-owner.splice(unp, 1)
-let unp2 = _owner.indexOf(ya)
-if (unp2 !== -1) _owner.splice(unp2, 1)
-fs.writeFileSync('./database/owner.json', JSON.stringify(owner))
-reply(`The Number ${ya} Has been deleted from owner list by the owner!!!`)
+const rawOwner = q.split("|")[0].trim().toLowerCase()
+if (!rawOwner) return reply(`Use ${prefix + command} number or LID`)
+const ownerId = rawOwner.endsWith('@lid') ? normalizeOwnerId(rawOwner) : rawOwner.replace(/[^0-9]/g, '')
+const index = owner.indexOf(ownerId)
+if (index === -1) return reply('That owner was not found')
+owner.splice(index, 1)
+const cacheIndex = _owner.indexOf(ownerId)
+if (cacheIndex !== -1) _owner.splice(cacheIndex, 1)
+fs.writeFileSync('./database/owner.json', JSON.stringify(owner, null, 2))
+reply(`✅ ${ownerId} was removed from the owner list`)
+}
 break
 case 'emptychat':
     EliteProTech.sendMessage(
