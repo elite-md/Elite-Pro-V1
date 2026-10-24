@@ -1,5 +1,4 @@
 import 'dotenv/config';
-
 // Contact details
 global.sessionid = process.env.SESSION_ID || '';
 global.dbSite = process.env.DB_SITE || '';
@@ -23,7 +22,6 @@ global.welcome = process.env.WELCOME === 'true';
 global.autoreact = process.env.AUTO_REACT === 'true';
 global.autolikestatus = process.env.AUTO_LIKE_STATUS === 'true';
 global.autoOffline = process.env.AUTO_OFFLINE === 'true';
-
 
 // Sticker details
 global.packname = process.env.PACKNAME || 'Sticker By';
