@@ -17,9 +17,9 @@ global.autoRecording = process.env.AUTO_RECORDING === 'true';
 global.autoTyping = process.env.AUTO_TYPING === 'true';
 global.autorecordtype = process.env.AUTO_RECORD_TYPE === 'true';
 global.autoread = process.env.AUTO_READ === 'true';
-global.autobio = process.env.AUTO_BIO !== 'false';
-global.autoviewstatus = process.env.AUTO_VIEW_STATUS !== 'false';
-global.welcome = process.env.WELCOME !== 'false';
+global.autobio = process.env.AUTO_BIO === 'true';
+global.autoviewstatus = process.env.AUTO_VIEW_STATUS === 'true';
+global.welcome = process.env.WELCOME === 'true';
 global.autoreact = process.env.AUTO_REACT === 'true';
 global.autolikestatus = process.env.AUTO_LIKE_STATUS === 'true';
 global.autoOffline = process.env.AUTO_OFFLINE === 'true';
@@ -44,4 +44,3 @@ global.mess = {
     wait: '⏳ Processing your request... Please wait a moment.',
     error: '❌ An unexpected error occurred. Please try again later.',
 };
-
