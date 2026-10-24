@@ -211,7 +211,7 @@ const Pino = require("pino")
 const readline = require("readline")
 let EliteProHandler = EliteProHandlerModule
 setupConsoleFilters()
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || process.env.SERVER_PORT || 3000);
 const INDEX_PATH = path.join(__dirname, 'lib', 'index.html');
 const healthServer = http.createServer((req, res) => {
     fs.readFile(INDEX_PATH, (err, data) => {
