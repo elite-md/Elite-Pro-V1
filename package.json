@@ -3,15 +3,14 @@
   "version": "1.1.1",
   "description": "A WhatsApp bot with rich features.",
   "main": "index.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "author": "cyrilix",
   "license": "MIT",
   "dependencies": {
-    "baileys": "npm:eliteprotech-baileys@1.1.2",
-    "@hapi/boom": "latest",
+    "baileys": "7.0.0-rc12",
     "awesome-phonenumber": "^5.9.0",
     "axios": "^1.14.0",
     "gifted-btns": "^1.0.2",
@@ -23,7 +22,7 @@
     "fs-extra": "^11.1.1",
     "libphonenumber-js": "^1.12.8",
     "human-readable": "^0.2.1",
-    "jimp": "^0.16.3",
+    "jimp": "^1.6.1",
     "jsdom": "^22.1.0",
     "moment-timezone": "^0.5.43",
     "node-fetch": "^2.6.11",

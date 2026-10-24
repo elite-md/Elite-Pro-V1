@@ -1,6 +1,4 @@
-require('dotenv').config();
-const fs = require('fs');
-const chalk = require('chalk');
+import 'dotenv/config';
 
 // Contact details
 global.sessionid = process.env.SESSION_ID || '';
@@ -47,10 +45,3 @@ global.mess = {
     error: '❌ An unexpected error occurred. Please try again later.',
 };
 
-let file = require.resolve(__filename);
-fs.watchFile(file, () => {
-    fs.unwatchFile(file);
-    console.log(chalk.redBright(`Updated: ${__filename}`));
-    delete require.cache[file];
-    require(file);
-});
